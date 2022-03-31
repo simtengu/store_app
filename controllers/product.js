@@ -2,8 +2,12 @@ const Product = require('../models/Product');
 
 
 const fetchProducts = async (req, res) => {
-    const products = await Product.find({}).sort('-createdAt');
-    res.status(200).json({ products });
+    const {page} = req.query;
+    let limit = 16;
+    let skip = (page - 1) * limit;
+    const items = await Product.find({});
+    const products = await Product.find({}).sort('-createdAt').skip(skip).limit(limit);
+    res.status(200).json({ products,count:items.length });
 }
 
 
@@ -21,8 +25,8 @@ const fetchRelatedProducts = async (req, res) => {
 
 const fetchFilteredProducts = async (req,res)=>{
     const {category,tag,sort,brand,range,greater,less} = req.query;
+    //pagination information.... 
     let  filterObject = {};
-
     if (greater) {
         filterObject.price = {$gte:greater};
     }
@@ -53,19 +57,40 @@ const fetchFilteredProducts = async (req,res)=>{
         if(sort === "cheap"){ sortBy = 'price'}
         if(sort === "expensive"){ sortBy = '-price'}
         if(sort === "category"){ sortBy = 'category'}
-        if(sort === "brand"){ sortBy = 'brand'}
-         products = await Product.find(filterObject).sort(sortBy);
-         res.status(200).json({products});
-
-    }else{
-       products = await Product.find(filterObject);
-       res.status(200).json({products});
-
-  }
-
+        if(sort === "brand"){
+             sortBy = 'brand'
+            }
+        if (sort === "trending") {
+            sortBy = '-monthlyViews';
+          
+            products = await Product.find({}).sort(sortBy).limit(5);
+            res.status(200).json({ products });
+            return;
+        }
+        
+      
+        products = await Product.find(filterObject).sort(sortBy);
+         res.status(200).json({ products});
+         
+        }else{
+            
+            products = await Product.find(filterObject);
+            res.status(200).json({ products});
+            
+        }
+        
+        
+    }
+    
+    const updateTrending = async (req,res)=>{
+        const {productId} = req.params;
+        const product = await Product.findById(productId);
+        await Product.findByIdAndUpdate(productId, { monthlyViews:product.monthlyViews+1});
+        let products = await Product.find({}).sort("-monthlyViews").limit(5);
+        res.status(200).json({products});
 
 }
 
 
 
-module.exports = { fetchProducts, fetchRelatedProducts,fetchFilteredProducts };
+module.exports = { fetchProducts, fetchRelatedProducts, fetchFilteredProducts, updateTrending };

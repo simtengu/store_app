@@ -12,6 +12,7 @@ const connectDb = require('./db/connect');
 const authRouter = require('./routes/auth');
 const userRouter = require('./routes/user');
 const productsRouter = require('./routes/Product');
+const ordersRouter = require('./routes/order');
 const adminRouter = require('./routes/admin');
 //middlewares....................... 
 const notFoundMiddleware = require('./middleware/not_found');
@@ -31,6 +32,7 @@ app.get('/',(req,res)=>{
 app.use('/api',authRouter);
 app.use('/api',productsRouter);
 app.use('/api',authMiddleware,userRouter);
+app.use('/api',authMiddleware,ordersRouter);
 app.use('/api',authMiddleware,adminRouter);
 //register errorhandler middleware 
 app.use(errorHandlerMiddleware);

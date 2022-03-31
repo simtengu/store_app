@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router();
 const multer = require('multer');
-const { fetchProducts, fetchRelatedProducts, fetchFilteredProducts } = require('../controllers/product');
+const { fetchProducts, fetchRelatedProducts, fetchFilteredProducts, updateTrending } = require('../controllers/product');
 const Product = require('../models/Product');
 
 const storage = multer.diskStorage({
@@ -42,6 +42,7 @@ router.post('/image/upload', upload.single('picha'), async (req, res) => {
 router.get('/products',fetchProducts);
 router.get('/products/filtered', fetchFilteredProducts);
 router.get('/products/related/:productId', fetchRelatedProducts);
+router.patch('/products/trendingUpdate/:productId', updateTrending);
 
 
 
