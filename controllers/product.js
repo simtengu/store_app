@@ -91,6 +91,23 @@ const fetchFilteredProducts = async (req,res)=>{
 
 }
 
+const searchProduct = async (req,res)=>{
+    const {search} = req.query;
+    let results = [];
+    let products = await Product.find({ $or: [{ title: { $regex: `.*${search}.*`, $options: 'i' } }, { category: { $regex: `.*${search}.*`, $options: 'i' } }] });
+
+  if(products.length > 0){
+      results = products.filter((item,index)=>{
+         let productIndex = products.findIndex(product=> product._id === item._id);
+         return productIndex === index;
+     })
+
+  }else{
+      results = products;
+  }
+    res.status(200).json({products:results});
+}
 
 
-module.exports = { fetchProducts, fetchRelatedProducts, fetchFilteredProducts, updateTrending };
+
+module.exports = { searchProduct, fetchProducts, fetchRelatedProducts, fetchFilteredProducts, updateTrending };
