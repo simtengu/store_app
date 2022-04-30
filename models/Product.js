@@ -27,7 +27,7 @@ const productSchema = new mongoose.Schema({
         default:0
     },
     images:{
-        type:[String],
+        type:[{}],
         required:[true,'provide atleast one image for the product']
     }
 

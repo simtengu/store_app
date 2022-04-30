@@ -4,6 +4,7 @@ const {
     NotFoundError,
     UnAuthenticatedError
 } = require('../errors');
+const Wishlist = require('../models/Wishlist');
 
 //fetch all users ............................... 
 const getUsers = async (req, res) => {
@@ -58,14 +59,42 @@ const updateUserDetails = async (req, res) => {
         }
 
         res.status(200).json({ status: 'success', user });
-
+       
     
+}
 
-        throw new Error("something went wrong")
-    
+const addWishlist = async (req,res)=>{
+    const user_id = req.user.userId;
+    const data = await Wishlist.findOne({owner:user_id}); 
+    if(data){
+        let wishlist = data.wishlist;
+        wishlist.push(req.body);
+        await Wishlist.findOneAndUpdate({owner:user_id},{wishlist})
+    }else{
+        await Wishlist.create({owner:user_id,wishlist:[req.body]})
+    }
 
+    const rsData = await Wishlist.findOne({owner:user_id}); 
+
+    res.status(201).json({status:'item saved in wishlist',wishlist:rsData})
+}
+
+const removeWishlistItem = async (req, res) => {
+    const user_id = req.user.userId;
+    const item_id = req.params.productId;
+    const data = await Wishlist.findOne({owner:user_id});
+    let wishlist = data.wishlist;
+    let updatedWishlist = wishlist.filter(item=>item._id !== item_id)
+   let updatedData =  await Wishlist.findOneAndUpdate({ owner: user_id }, { wishlist:updatedWishlist },{new:true});
+    res.status(200).json({ wishlist: updatedData });
+}
+
+const getWishlist = async(req,res)=>{
+    const user_id = req.user.userId;
+    const data = await Wishlist.findOne({owner:user_id});
+    res.status(200).json({wishlist:data});
 }
 
 module.exports = {
-    getUsers, updateUserDetails,getAuthUser,
+    getUsers, updateUserDetails, getAuthUser, getWishlist,addWishlist,removeWishlistItem
 }

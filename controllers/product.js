@@ -14,7 +14,6 @@ const fetchProducts = async (req, res) => {
 const fetchRelatedProducts = async (req, res) => {
     const { productId } = req.params;
     const product = await Product.findById(productId);
-    console.log(product);
     if (product) {
         const products = await Product.find({ _id: { $ne: productId }, category: product.category, brand: product.brand });
         const products1 = await Product.find({ brand: { $ne: product.brand }, category: product.category });
@@ -96,6 +95,8 @@ const searchProduct = async (req,res)=>{
     let results = [];
     let products = await Product.find({ $or: [{ title: { $regex: `.*${search}.*`, $options: 'i' } }, { category: { $regex: `.*${search}.*`, $options: 'i' } }] });
 
+
+// removing duplicate products..............
   if(products.length > 0){
       results = products.filter((item,index)=>{
          let productIndex = products.findIndex(product=> product._id === item._id);

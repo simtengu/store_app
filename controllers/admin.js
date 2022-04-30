@@ -4,6 +4,7 @@ const fs = require('fs')
 const {
     UnAuthenticatedError, NotFoundError
 } = require('../errors');
+const cloudinary = require("../utils/cloudinary")
 
 //fetch all products ............................... 
 const getProducts = async (req, res) => {
@@ -22,8 +23,15 @@ const getProducts = async (req, res) => {
 }
 
 const saveProduct = async (req, res) => {
+    try{
+
     const product = await Product.create(req.body);
     res.status(201).json({ product });
+
+    }catch(error){
+     res.status(501).json({message:error.message})
+    }
+
 }
 
 const deleteProduct = async (req, res) => {
@@ -37,15 +45,11 @@ const deleteProduct = async (req, res) => {
     //deleting product images................
     if (images.length > 0) {
         
-        images.forEach(img => {
-            let imgArray = img.split('/');
-            let path = imgArray[imgArray.length - 1];
-    
-            fs.unlink(path, (err => {
-                if (err) { throw err } 
-            }))
-    
-        });
+        for (const img of images) {
+
+            await cloudinary.uploader.destroy(img.image_id)
+
+        }
     }
     //deleting the product............ 
     await Product.findOneAndRemove({_id:productId})
@@ -54,27 +58,19 @@ const deleteProduct = async (req, res) => {
 
 const deleteSingleImage = async (req, res) => {
     const { productId } = req.params;
-    const {image} = req.body;
-    console.log(image);
+    const { image_id} = req.body;
+    // console.log(image);
     const product = await Product.findOne({ _id: productId })
     if (!product) {
         throw new NotFoundError('the product was not found');
         return;
     }
+    
     const images = product.images;
     //deleting product image................
-    if (images.length > 0) {
-      
-            let imgArray = image.split('/');
-            let path = imgArray[imgArray.length - 1];
+    await cloudinary.uploader.destroy(image_id)
 
-            fs.unlink(path, (err => {
-                if (err) { throw err }
-            }))
-     
-    }
-    let newImagesList = images.filter(img=> img !== image);
-
+    let newImagesList = images.filter(img => img.image_id !== image_id);
     //updating the product(rm deleted image)............ 
    let updatedProduct = await Product.findOneAndUpdate({ _id: productId },{images:newImagesList},{returnDocument:"after"})
     res.status(200).json({ status: 'updated',product:updatedProduct })
